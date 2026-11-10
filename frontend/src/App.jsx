@@ -584,7 +584,7 @@ function CheckoutPage() {
                     customer_name: trimmedName,
                     email: trimmedEmail,
                     amount: subtotal,
-                    currency: 'INR',
+                    currency: 'USD',
                     product_name: cart.map((item) => products.find((product) => product.id === item.productId)?.name || item.productId).join(', '),
                     otp: otpCode.trim(),
                   }),
