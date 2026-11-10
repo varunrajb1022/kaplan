@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal, ROUND_HALF_UP
 
 from fastapi import APIRouter, HTTPException
 
@@ -31,13 +32,15 @@ def create_order(request: OrderCreateRequest):
         )
 
     items = [item.model_dump() for item in request.items]
-    total_amount = 0
+    total_amount = Decimal('0')
     for item in items:
         product = PRODUCT_CATALOG.get(item['productId'])
         if product is None:
             raise HTTPException(status_code=400, detail=f'Invalid product: {item["productId"]}')
-        total_amount += int(product['price']) * int(item['quantity'])
+        price = Decimal(str(product['price']))
+        total_amount += (price * Decimal('100')) * Decimal(int(item['quantity']))
 
+    total_amount = total_amount.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
     if total_amount <= 0:
         raise HTTPException(status_code=400, detail='Order total must be greater than zero')
 

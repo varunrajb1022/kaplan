@@ -43,6 +43,15 @@ PRODUCT_CATALOG = {
         'featured': True,
         'description': 'Question bank, exam-style questions, and analytics suite.',
     },
+    'test-product': {
+        'id': 'test-product',
+        'name': 'Test Product',
+        'category': 'Testing',
+        'price': 0.011,
+        'original_price': 0.02,
+        'featured': True,
+        'description': 'Low-value live checkout test item for verifying Razorpay integration.',
+    },
     'flextrack': {
         'id': 'flextrack',
         'name': 'FlexTrack Course',

@@ -4,15 +4,16 @@ import products from './data/products'
 import { useCart } from './context/CartContext'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-const PAYMENTS_DISABLED = true
-const PAYMENTS_DISABLED_MESSAGE = 'Payments are coming soon. Add Razorpay API credentials to enable secure checkout.'
 
-const formatCurrency = (amount) =>
-  new Intl.NumberFormat('en-US', {
+const formatCurrency = (amount) => {
+  const minimumFractionDigits = Math.abs(amount) < 1 ? 3 : 0
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 0,
+    minimumFractionDigits,
+    maximumFractionDigits: minimumFractionDigits,
   }).format(amount)
+}
 
 function App() {
   return (
@@ -509,11 +510,6 @@ function CheckoutPage() {
   }
 
   const handleCheckout = async () => {
-    if (PAYMENTS_DISABLED) {
-      setError(PAYMENTS_DISABLED_MESSAGE)
-      return
-    }
-
     if (!cart.length) {
       navigate('/cart')
       return
@@ -552,10 +548,17 @@ function CheckoutPage() {
         const result = await response.json()
         const orderId = result.orderId || `demo_${Date.now()}`
         const total = result.amount || subtotal
+        const keyId = result.keyId || ''
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+        if (isLocalhost && keyId.startsWith('rzp_live_')) {
+          setError('Live Razorpay keys cannot be used on localhost. Please test on a deployed HTTPS domain or switch to a Razorpay test key for local development.')
+          return
+        }
 
         if (window.Razorpay) {
           const options = {
-            key: result.keyId || 'rzp_test_demo',
+            key: keyId || 'rzp_test_demo',
             amount: total,
             currency: 'INR',
             name: 'Kaplan1',
@@ -573,7 +576,7 @@ function CheckoutPage() {
                     customer_name: trimmedName,
                     email: trimmedEmail,
                     amount: subtotal,
-                    currency: 'USD',
+                    currency: 'INR',
                     product_name: cart.map((item) => products.find((product) => product.id === item.productId)?.name || item.productId).join(', '),
                     otp: otpCode.trim(),
                   }),
@@ -618,7 +621,7 @@ function CheckoutPage() {
       throw new Error('Backend order creation failed')
     } catch (checkoutError) {
       console.error(checkoutError)
-      setError(checkoutError.message || 'Payments are temporarily unavailable while Razorpay is not configured.')
+      setError(checkoutError.message || 'Payment creation failed. Please try again.')
     } finally {
       setProcessing(false)
     }
@@ -743,19 +746,13 @@ function CheckoutPage() {
 
           {error && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-          {PAYMENTS_DISABLED && (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
-              {PAYMENTS_DISABLED_MESSAGE}
-            </div>
-          )}
-
           <button
             type="button"
             onClick={handleCheckout}
-            disabled={processing || PAYMENTS_DISABLED}
+            disabled={processing}
             className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#2d1147] px-5 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 hover:bg-[#210d32]"
           >
-            {processing ? 'Processing...' : PAYMENTS_DISABLED ? 'Payments coming soon' : 'Pay securely'}
+            {processing ? 'Processing...' : 'Pay securely'}
           </button>
         </aside>
       </div>

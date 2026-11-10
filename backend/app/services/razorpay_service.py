@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+from decimal import Decimal, ROUND_HALF_UP
 
 import razorpay
 
@@ -9,15 +10,20 @@ client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if RAZORPA
 
 
 def calculate_total(items: list[dict]) -> int:
-    total = 0
+    total = Decimal('0')
     for item in items:
         product_id = item.get('productId')
         quantity = int(item.get('quantity', 1))
         product = PRODUCT_CATALOG.get(product_id)
         if product is None:
             raise ValueError(f'Invalid product: {product_id}')
-        total += int(product['price']) * quantity
-    return total
+
+        unit_price = Decimal(str(product['price']))
+        amount_in_rupees = (unit_price * Decimal('100')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        total += amount_in_rupees * quantity
+
+    total = max(total, Decimal('100'))
+    return int(total)
 
 
 def create_razorpay_order(items: list[dict]) -> dict:

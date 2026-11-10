@@ -40,6 +40,45 @@ const products = [
       'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=900&q=80',
   },
   {
+    id: 'test-product',
+    slug: 'test-product',
+    name: 'Test Product',
+    category: 'Testing',
+    subtitle: 'Live Razorpay validation item',
+    price: 0.011,
+    originalPrice: 0.02,
+    badge: 'Test',
+    description:
+      'Small-value test item for validating live Razorpay checkout in a safe, minimum-payment flow.',
+    longDescription:
+      'Use this test item to validate Razorpay checkout behavior with a tiny amount, confirm your live keys work, and smoke-test the booking flow without using a large purchase.',
+    features: [
+      'Very small live-payment test amount',
+      'Razorpay checkout smoke test',
+      'Quick validation for production keys',
+      'Good for QA and payment regression checks',
+    ],
+    benefits: [
+      'Validate the entire live payment path with a minimal amount.',
+      'Confirm your live API keys are wired correctly.',
+      'Use this as a safe payment smoke test before releasing large purchases.',
+    ],
+    faqs: [
+      {
+        question: 'Why is this product priced so low?',
+        answer:
+          'It is intended as a smoke-test item to confirm your live Razorpay integration is working correctly before selling full-price courses.',
+      },
+      {
+        question: 'Is this for real checkout?',
+        answer:
+          'Yes. It is meant to validate the actual checkout process with your live Razorpay credentials.',
+      },
+    ],
+    image:
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+  },
+  {
     id: 'flextrack',
     slug: 'flextrack-course',
     name: 'FlexTrack Course',
