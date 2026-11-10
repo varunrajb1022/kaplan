@@ -26,11 +26,9 @@ FROM_EMAIL = os.getenv('FROM_EMAIL', 'your-gmail-address@gmail.com')
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'your-gmail-address@gmail.com')
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', 'support@kaplan1.com')
 
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USERNAME = os.getenv('EMAIL_USERNAME', '')
-EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD', '')
-EMAIL_FROM = os.getenv('EMAIL_FROM', FROM_EMAIL)
+SENDLIBERTY_API_KEY = os.getenv('SENDLIBERTY_API_KEY', '').strip()
+SENDLIBERTY_BASE_URL = os.getenv('SENDLIBERTY_BASE_URL', 'https://sendliberty.com').rstrip('/')
+SENDLIBERTY_FROM_EMAIL = os.getenv('SENDLIBERTY_FROM_EMAIL', os.getenv('EMAIL_FROM', FROM_EMAIL)).strip()
 
 PRODUCT_CATALOG = {
     'qbank': {

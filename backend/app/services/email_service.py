@@ -2,12 +2,12 @@ import hashlib
 import logging
 import os
 import random
-import smtplib
 import time
 from datetime import datetime, timezone
-from email.message import EmailMessage
 
-from app.config import ADMIN_EMAIL, FROM_EMAIL, SUPPORT_EMAIL
+import requests
+
+from app.config import ADMIN_EMAIL, FROM_EMAIL, SENDLIBERTY_API_KEY, SENDLIBERTY_BASE_URL, SENDLIBERTY_FROM_EMAIL, SUPPORT_EMAIL
 from app.services.email_templates import (
     build_admin_order_notification_html,
     build_customer_order_confirmation_html,
@@ -25,50 +25,74 @@ def _make_email_key(prefix: str, order_id: str, payment_id: str, recipient: str)
     return f'{prefix}:{order_id}:{payment_id}:{(recipient or "").lower()}'
 
 
-def _send_smtp_email(recipients: list[str], subject: str, html_content: str, text_content: str) -> dict:
-    sender = os.getenv('EMAIL_FROM', os.getenv('FROM_EMAIL', FROM_EMAIL)).strip()
-    host = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
-    port = int(os.getenv('EMAIL_PORT', '587'))
-    username = os.getenv('EMAIL_USERNAME', '').strip()
-    password = os.getenv('EMAIL_PASSWORD', '').strip()
+def _post_sendliberty_email(url: str, headers: dict, payload: dict, timeout: int = 30):
+    return requests.post(url, headers=headers, json=payload, timeout=timeout)
+
+
+def _send_sendliberty_email(recipients: list[str], subject: str, html_content: str, text_content: str) -> dict:
+    sender = (
+        os.getenv('SENDLIBERTY_FROM_EMAIL')
+        or os.getenv('EMAIL_FROM')
+        or os.getenv('FROM_EMAIL')
+        or (SENDLIBERTY_FROM_EMAIL or FROM_EMAIL)
+    ).strip()
+    api_key = (os.getenv('SENDLIBERTY_API_KEY') or SENDLIBERTY_API_KEY).strip()
+    base_url = (os.getenv('SENDLIBERTY_BASE_URL') or SENDLIBERTY_BASE_URL).rstrip('/')
+    url = f'{base_url}/api/send'
 
     recipients = list(dict.fromkeys((recipient or '').strip() for recipient in recipients if (recipient or '').strip()))
     if not recipients:
-        return {'status': 'skipped', 'provider': 'gmail_smtp', 'reason': 'No email recipients specified'}
+        return {'status': 'skipped', 'provider': 'sendliberty', 'reason': 'No email recipients specified'}
 
-    if not host or not username or not password:
-        logger.info('Gmail SMTP credentials are not configured. Simulating email delivery for %s.', recipients)
+    if not api_key:
+        logger.info('SendLiberty API key is not configured. Simulating email delivery for %s.', recipients)
         return {
             'status': 'simulated',
-            'provider': 'gmail_smtp',
-            'message': 'Email delivery was simulated because Gmail SMTP credentials are not configured.',
+            'provider': 'sendliberty',
+            'message': 'Email delivery was simulated because the SendLiberty API key is not configured.',
             'recipients': recipients,
             'from': sender,
         }
 
-    message = EmailMessage()
-    message['Subject'] = subject
-    message['From'] = sender
-    message['To'] = ', '.join(recipients)
-    message.set_content(text_content)
-    message.add_alternative(html_content, subtype='html')
+    payload = {
+        'from': sender,
+        'to': recipients,
+        'subject': subject,
+        'html': html_content,
+        'text': text_content,
+    }
 
     try:
-        if port == 465:
-            with smtplib.SMTP_SSL(host, port, timeout=30) as server:
-                server.login(username, password)
-                server.send_message(message)
-        else:
-            with smtplib.SMTP(host, port, timeout=30) as server:
-                server.starttls()
-                server.login(username, password)
-                server.send_message(message)
+        response = _post_sendliberty_email(
+            url=url,
+            headers={'X-API-Key': api_key, 'Content-Type': 'application/json'},
+            payload=payload,
+            timeout=30,
+        )
+        response_data = response.json() if response.content else {}
 
-        logger.info('Gmail SMTP email queued successfully for recipients: %s', recipients)
-        return {'status': 'sent', 'provider': 'gmail_smtp', 'recipients': recipients, 'from': sender}
+        if response.status_code >= 400:
+            logger.exception('SendLiberty returned an error: %s', response.text)
+            return {
+                'status': 'failed',
+                'provider': 'sendliberty',
+                'error': response.text,
+                'recipients': recipients,
+                'from': sender,
+                'response': response_data,
+            }
+
+        logger.info('SendLiberty email queued successfully for recipients: %s', recipients)
+        return {
+            'status': 'sent',
+            'provider': 'sendliberty',
+            'recipients': recipients,
+            'from': sender,
+            'response': response_data,
+        }
     except Exception as exc:  # pragma: no cover - depends on external email service
-        logger.exception('Failed to send email via Gmail SMTP')
-        return {'status': 'failed', 'provider': 'gmail_smtp', 'error': str(exc), 'recipients': recipients, 'from': sender}
+        logger.exception('Failed to send email via SendLiberty')
+        return {'status': 'failed', 'provider': 'sendliberty', 'error': str(exc), 'recipients': recipients, 'from': sender}
 
 
 def _hash_otp(value: str) -> str:
@@ -85,7 +109,7 @@ def send_email_otp(email: str) -> dict:
     _OTP_STORE[normalized_email] = {'otp_hash': _hash_otp(otp), 'expires_at': expires_at, 'verified': False}
 
     html = build_email_otp_html(normalized_email, otp)
-    result = _send_smtp_email(
+    result = _send_sendliberty_email(
         recipients=[normalized_email],
         subject='Kaplan1 email verification code',
         html_content=html,
@@ -124,10 +148,10 @@ def send_test_email(recipient: str, subject: str = 'Kaplan1 test email') -> dict
     html = (
         '<html><body>'
         '<h2>Kaplan1 email test</h2>'
-        '<p>This is a test email sent from the FastAPI backend using Gmail SMTP.</p>'
+        '<p>This is a test email sent from the FastAPI backend using SendLiberty.</p>'
         '</body></html>'
     )
-    return _send_smtp_email(
+    return _send_sendliberty_email(
         recipients=[normalized_recipient],
         subject=subject,
         html_content=html,
@@ -166,7 +190,7 @@ def send_customer_payment_confirmation(
         payment_date=payment_timestamp,
         support_email=support_email,
     )
-    result = _send_smtp_email(
+    result = _send_sendliberty_email(
         recipients=[customer_email],
         subject=f'Kaplan1 Payment Confirmation - {order_id}',
         html_content=html,
@@ -212,7 +236,7 @@ def send_admin_order_notification(
         payment_id=payment_id,
         payment_status=payment_status,
     )
-    result = _send_smtp_email(
+    result = _send_sendliberty_email(
         recipients=[admin_email],
         subject=f'New Kaplan1 order received - {order_id}',
         html_content=html,
@@ -261,7 +285,7 @@ def send_payment_failure_email(
         reason=reason,
         support_email=support_email,
     )
-    result = _send_smtp_email(
+    result = _send_sendliberty_email(
         recipients=[customer_email],
         subject=f'Kaplan1 payment issue - {order_id}',
         html_content=html,
