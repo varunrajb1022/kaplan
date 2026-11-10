@@ -846,7 +846,6 @@ function Footer() {
         <div>
           <div className="font-semibold text-white">Contact</div>
           <ul className="mt-3 space-y-2 text-sm text-slate-400">
-            <li>+1 (800) 555-0147</li>
             <li>support@kaplan1.com</li>
             <li>Mon–Sat, 8am–8pm</li>
           </ul>
