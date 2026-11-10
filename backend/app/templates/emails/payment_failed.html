@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Unsuccessful</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f5f3ef; font-family:Arial, Helvetica, sans-serif; color:#1f2937;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f3ef; padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px; background-color:#ffffff; border:1px solid #e2e8f0; border-radius:20px; overflow:hidden;">
+            <tr>
+              <td style="background:#7f1d1d; padding:24px 32px; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:0.04em;">
+                Kaplan1
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <h2 style="margin:0 0 16px; font-size:28px; color:#111827;">Payment was not completed</h2>
+                <p style="margin:0 0 20px; font-size:16px; line-height:1.7; color:#374151;">
+                  Hello $customer_name, we were unable to complete your payment for $product_name.
+                </p>
+
+                <p style="margin:0 0 24px; padding:16px 18px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px; color:#7f1d1d; font-size:15px; line-height:1.6;">
+                  Reason: $reason
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                  <tr>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; color:#374151;">Product</td>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; text-align:right; color:#111827;">$product_name</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; color:#374151;">Amount</td>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; text-align:right; color:#111827;">$amount</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; color:#374151;">Order ID</td>
+                    <td style="padding:14px 18px; border-bottom:1px solid #e2e8f0; text-align:right; color:#111827;">$order_id</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:14px 18px; color:#374151;">Payment ID</td>
+                    <td style="padding:14px 18px; text-align:right; color:#111827;">$payment_id</td>
+                  </tr>
+                </table>
+
+                <p style="margin:24px 0 0; font-size:15px; line-height:1.7; color:#374151;">
+                  Please retry your payment using the checkout page or contact support at <a href="mailto:$support_email" style="color:#2d1147;">$support_email</a> if you need help.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

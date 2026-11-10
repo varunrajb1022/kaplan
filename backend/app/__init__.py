@@ -1,0 +1,1 @@
+"""Course commerce FastAPI application."""

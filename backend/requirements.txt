@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+razorpay
+python-dotenv
+pydantic
+resend>=2.0.0
