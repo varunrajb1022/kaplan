@@ -450,6 +450,10 @@ function CheckoutPage() {
       setError('Enter a valid email before requesting the OTP.')
       return
     }
+    if (!API_BASE_URL) {
+      setError('The deployed frontend is missing VITE_API_BASE_URL. Add your backend URL in the Vercel environment variables.')
+      return
+    }
 
     setOtpLoading(true)
     setError('')
@@ -484,6 +488,10 @@ function CheckoutPage() {
     }
     if (!trimmedOtp) {
       setError('Enter the 6-digit code you received by email.')
+      return
+    }
+    if (!API_BASE_URL) {
+      setError('The deployed frontend is missing VITE_API_BASE_URL. Add your backend URL in the Vercel environment variables.')
       return
     }
 
