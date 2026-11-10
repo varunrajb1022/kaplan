@@ -2,8 +2,10 @@ import hashlib
 import logging
 import os
 import random
+import smtplib
 import time
 from datetime import datetime, timezone
+from email.message import EmailMessage
 
 from app.config import ADMIN_EMAIL, FROM_EMAIL, SUPPORT_EMAIL
 from app.services.email_templates import (
@@ -23,46 +25,50 @@ def _make_email_key(prefix: str, order_id: str, payment_id: str, recipient: str)
     return f'{prefix}:{order_id}:{payment_id}:{(recipient or "").lower()}'
 
 
-def _send_resend_email(recipients: list[str], subject: str, html_content: str, text_content: str) -> dict:
-    api_key = os.getenv('RESEND_API_KEY', '')
-    sender = os.getenv('FROM_EMAIL', FROM_EMAIL)
+def _send_smtp_email(recipients: list[str], subject: str, html_content: str, text_content: str) -> dict:
+    sender = os.getenv('EMAIL_FROM', os.getenv('FROM_EMAIL', FROM_EMAIL)).strip()
+    host = os.getenv('EMAIL_HOST', 'smtp.gmail.com').strip()
+    port = int(os.getenv('EMAIL_PORT', '587'))
+    username = os.getenv('EMAIL_USERNAME', '').strip()
+    password = os.getenv('EMAIL_PASSWORD', '').strip()
 
     recipients = list(dict.fromkeys((recipient or '').strip() for recipient in recipients if (recipient or '').strip()))
     if not recipients:
-        return {'status': 'skipped', 'provider': 'resend', 'reason': 'No email recipients specified'}
+        return {'status': 'skipped', 'provider': 'gmail_smtp', 'reason': 'No email recipients specified'}
 
-    if not api_key:
-        logger.info('Resend API key not configured. Simulating email delivery for %s.', recipients)
+    if not host or not username or not password:
+        logger.info('Gmail SMTP credentials are not configured. Simulating email delivery for %s.', recipients)
         return {
             'status': 'simulated',
-            'provider': 'resend',
-            'message': 'Email delivery was simulated because RESEND_API_KEY is not configured.',
+            'provider': 'gmail_smtp',
+            'message': 'Email delivery was simulated because Gmail SMTP credentials are not configured.',
             'recipients': recipients,
             'from': sender,
         }
 
-    payload = {
-        'from': sender,
-        'to': recipients,
-        'subject': subject,
-        'html': html_content,
-        'text': text_content,
-    }
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From'] = sender
+    message['To'] = ', '.join(recipients)
+    message.set_content(text_content)
+    message.add_alternative(html_content, subtype='html')
 
     try:
-        import resend
+        if port == 465:
+            with smtplib.SMTP_SSL(host, port, timeout=30) as server:
+                server.login(username, password)
+                server.send_message(message)
+        else:
+            with smtplib.SMTP(host, port, timeout=30) as server:
+                server.starttls()
+                server.login(username, password)
+                server.send_message(message)
 
-        resend.api_key = api_key
-        response = resend.Emails.send(payload)
-
-        email_id = getattr(response, 'id', None)
-        if isinstance(response, dict):
-            email_id = response.get('id')
-        logger.info('Resend email queued successfully: %s', email_id)
-        return {'status': 'sent', 'provider': 'resend', 'id': email_id, 'recipients': recipients}
+        logger.info('Gmail SMTP email queued successfully for recipients: %s', recipients)
+        return {'status': 'sent', 'provider': 'gmail_smtp', 'recipients': recipients, 'from': sender}
     except Exception as exc:  # pragma: no cover - depends on external email service
-        logger.exception('Failed to send email via Resend')
-        return {'status': 'failed', 'provider': 'resend', 'error': str(exc), 'recipients': recipients}
+        logger.exception('Failed to send email via Gmail SMTP')
+        return {'status': 'failed', 'provider': 'gmail_smtp', 'error': str(exc), 'recipients': recipients, 'from': sender}
 
 
 def _hash_otp(value: str) -> str:
@@ -79,7 +85,7 @@ def send_email_otp(email: str) -> dict:
     _OTP_STORE[normalized_email] = {'otp_hash': _hash_otp(otp), 'expires_at': expires_at, 'verified': False}
 
     html = build_email_otp_html(normalized_email, otp)
-    result = _send_resend_email(
+    result = _send_smtp_email(
         recipients=[normalized_email],
         subject='Kaplan1 email verification code',
         html_content=html,
@@ -118,10 +124,10 @@ def send_test_email(recipient: str, subject: str = 'Kaplan1 test email') -> dict
     html = (
         '<html><body>'
         '<h2>Kaplan1 email test</h2>'
-        '<p>This is a test email sent from the FastAPI backend using Resend.</p>'
+        '<p>This is a test email sent from the FastAPI backend using Gmail SMTP.</p>'
         '</body></html>'
     )
-    return _send_resend_email(
+    return _send_smtp_email(
         recipients=[normalized_recipient],
         subject=subject,
         html_content=html,
@@ -160,7 +166,7 @@ def send_customer_payment_confirmation(
         payment_date=payment_timestamp,
         support_email=support_email,
     )
-    result = _send_resend_email(
+    result = _send_smtp_email(
         recipients=[customer_email],
         subject=f'Kaplan1 Payment Confirmation - {order_id}',
         html_content=html,
@@ -206,7 +212,7 @@ def send_admin_order_notification(
         payment_id=payment_id,
         payment_status=payment_status,
     )
-    result = _send_resend_email(
+    result = _send_smtp_email(
         recipients=[admin_email],
         subject=f'New Kaplan1 order received - {order_id}',
         html_content=html,
@@ -255,7 +261,7 @@ def send_payment_failure_email(
         reason=reason,
         support_email=support_email,
     )
-    result = _send_resend_email(
+    result = _send_smtp_email(
         recipients=[customer_email],
         subject=f'Kaplan1 payment issue - {order_id}',
         html_content=html,

@@ -59,24 +59,24 @@ const products = [
       'Good for QA and payment regression checks',
     ],
     benefits: [
-      'Validate the entire live payment path with a minimal amount.',
-      'Confirm your live API keys are wired correctly.',
-      'Use this as a safe payment smoke test before releasing large purchases.',
+      'Test the live payment flow without committing to a large transaction.',
+      'Verify checkout behavior, validation and redirect handling quickly.',
+      'Smoke-test your production keys before moving back to real purchase flows.',
     ],
     faqs: [
       {
-        question: 'Why is this product priced so low?',
+        question: 'Why is this product here?',
         answer:
-          'It is intended as a smoke-test item to confirm your live Razorpay integration is working correctly before selling full-price courses.',
+          'It is a temporary low-value item intended specifically for live Razorpay validation and QA checks.',
       },
       {
-        question: 'Is this for real checkout?',
+        question: 'Should I keep this in production?',
         answer:
-          'Yes. It is meant to validate the actual checkout process with your live Razorpay credentials.',
+          'Only while testing. It is best removed once all live payment flows are validated.',
       },
     ],
     image:
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80',
   },
   {
     id: 'flextrack',

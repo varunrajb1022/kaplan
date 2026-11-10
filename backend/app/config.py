@@ -22,16 +22,15 @@ CORS_ORIGINS = [
 if not CORS_ORIGINS:
     CORS_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
 
-RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
-FROM_EMAIL = os.getenv('FROM_EMAIL', 'onboarding@resend.dev')
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'your-resend-account@email.com')
+FROM_EMAIL = os.getenv('FROM_EMAIL', 'your-gmail-address@gmail.com')
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'your-gmail-address@gmail.com')
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', 'support@kaplan1.com')
 
-EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USERNAME = os.getenv('EMAIL_USERNAME', '')
 EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD', '')
-EMAIL_FROM = os.getenv('EMAIL_FROM', 'onboarding@resend.dev')
+EMAIL_FROM = os.getenv('EMAIL_FROM', FROM_EMAIL)
 
 PRODUCT_CATALOG = {
     'qbank': {
@@ -50,7 +49,7 @@ PRODUCT_CATALOG = {
         'price': 0.011,
         'original_price': 0.02,
         'featured': True,
-        'description': 'Low-value live checkout test item for verifying Razorpay integration.',
+        'description': 'Small-value test item for validating live Razorpay checkout in a safe, minimum-payment flow.',
     },
     'flextrack': {
         'id': 'flextrack',
