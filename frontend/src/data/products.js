@@ -6,7 +6,7 @@ const products = [
     category: 'Qbank',
     subtitle: 'USMLE Step 1 prep course',
     price: 748,
-    originalPrice: 199,
+    originalPrice: 998,
     badge: 'Save 30%',
     description:
       'A question bank designed for targeted concept review, timed practice and measurable progress.',
