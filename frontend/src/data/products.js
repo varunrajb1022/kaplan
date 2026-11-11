@@ -45,7 +45,7 @@ const products = [
     name: 'FlexTrack Course',
     category: 'Course',
     subtitle: 'Self-paced learning system',
-    price: 1560,
+    price: 1460,
     originalPrice: 1990,
     badge: 'Save 30%',
     description:
