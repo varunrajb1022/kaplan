@@ -53,7 +53,7 @@ PRODUCT_CATALOG = {
         'id': 'flextrack',
         'name': 'FlexTrack Course',
         'category': 'Course',
-        'price': 156000,
+        'price': 146000,
         'original_price': 199000,
         'featured': True,
         'description': 'Self-paced learning with video modules and progress tracking.',
