@@ -35,7 +35,7 @@ PRODUCT_CATALOG = {
         'id': 'qbank',
         'name': 'Qbank',
         'category': 'Qbank',
-        'price': 14000,
+        'price': 74800,
         'original_price': 19900,
         'featured': True,
         'description': 'Question bank, exam-style questions, and analytics suite.',

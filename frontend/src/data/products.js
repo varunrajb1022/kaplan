@@ -5,7 +5,7 @@ const products = [
     name: 'Qbank',
     category: 'Qbank',
     subtitle: 'USMLE Step 1 prep course',
-    price: 140,
+    price: 748,
     originalPrice: 199,
     badge: 'Save 30%',
     description:
